@@ -37,7 +37,7 @@ export default function RegisterPage() {
 return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-100">
         <Card className="w-full max-w-sm border-neutral-200 shadow-lg">
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-8 space-y-4">
 
             <div className="flex justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow">

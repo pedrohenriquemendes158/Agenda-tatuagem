@@ -1,117 +1,152 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-    Card,
-    CardContent,
-    CardHeader, 
-     CardTitle, } from "@/components/ui/card" 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { signIn } from "next-auth/react"
+
 import { FcGoogle } from "react-icons/fc"
-import { User, Loader2 } from "lucide-react"
+import { Loader2, UserCircle } from "lucide-react"
 import Link from "next/link"
-import { UserCircle } from "lucide-react"
 
-export default function LoginPage () {
-const [loading, setLoading] = useState(false)
+export default function LoginPage() {
+  const router = useRouter()
 
-async function handleLogin() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  async function handleLogin() {
     try {
-        setLoading(true)
+      setLoading(true)
 
-        await signIn("credentials", {
-            email:"email@email.com",
-            password:"123456",
-            redirect: true,
-            callbackUrl:"/dashboard"
-        })
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (!res?.ok) {
+        alert("Email ou senha inválidos")
+        return
+      }
+
+      const session = await fetch("/api/auth/session").then((res) =>
+        res.json()
+      )
+
+      const role = session?.user?.role
+
+      if (role === "CLIENT") {
+        router.push("/cliente/novo")
+      } else if (role === "ARTIST") {
+        router.push("/tatuador")
+      } else if (role === "ADMIN") {
+        router.push("/admin")
+      } else {
+        router.push("/")
+      }
     } catch (error) {
-        console.error(error)
+      console.error(error)
+      alert("Erro ao fazer login")
     } finally {
-        setLoading(false)
+      setLoading(false)
     }
-}
+  }
 
-return(
-
+  return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-100">
-        
-        <Card className="w-full max-w-sm border-neutral-200 shadow-lg">
-            <CardHeader className="items-center space-y-3">
+      <Card className="w-full max-w-sm border-neutral-200 shadow-lg">
+        <CardHeader className="items-center space-y-3">
+          <div className="h-16 w-16 rounded-full bg-white shadow flex items-center justify-center">
+            <UserCircle className="h-12 w-12 text-neutral-600" />
+          </div>
 
-             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-               <UserCircle className="h-12 w-12 text-neutral-600 transition-transform duration-300 hover:scale-105" /> 
-            </div>  
+          <CardTitle className="text-2xl text-neutral-800">
+            Entrar
+          </CardTitle>
 
-            <CardTitle className="text-2xl text-neutral-800">
-                Entrar
-            </CardTitle> 
+          <p className="text-sm text-neutral-500">
+            Acesse sua conta
+          </p>
+        </CardHeader>
 
-            <p className="text-sm text-neutral-500">
-                Acesse sua conta
-            </p>
-            </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-            <CardContent className="space-y-4">
+          <Input
+            type="password"
+            placeholder="********"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-                <Input 
-                type="email"
-                placeholder="seu@email"
-                className="border-neutral-300 focus-visible:ring-neutral-800" />
+          <div className="flex justify-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-neutral-600 hover:underline"
+            >
+              Esqueceu a senha?
+            </Link>
+          </div>
 
-                 <Input 
-                type="password"
-                placeholder="*******"
-                className="border-neutral-300 focus-visible:ring-neutral-800" />
-
-            <div className=" flex justify-center">
-                <Link href="/esqueci-senha" className="text-sm text-neutral-600 hover:underline">
-                Esqueceu a senha ?
-                </Link>
-            </div>
-
-            <Button className="w-full bg-neutral-900 text-white hover:bg-neutral-800"
+          <Button
+            className="w-full bg-neutral-900 text-white hover:bg-neutral-800"
             onClick={handleLogin}
-            disabled={loading}>
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Entrando...
+              </span>
+            ) : (
+              "Entrar"
+            )}
+          </Button>
 
-                {loading ? (
-                    <span className="flex items-center gab-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Entrando...
-                    </span>
-                ) : (
-                    "Entrar"
-                    
-                )}
+          <div className="flex items-center justify-center gap-2">
+            <Separator className="flex-1" />
+            <span className="text-neutral-600">ou</span>
+            <Separator className="flex-1" />
+          </div>
 
-            </Button>
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 border-neutral-300"
+            onClick={() =>
+              signIn("google", { callbackUrl: "/redirect" })
+            }
+          >
+            <FcGoogle className="h-5 w-5" />
+            Entrar com Google
+          </Button>
 
-            <div className="flex items-center justify-center gap-2">
-                <Separator className="flex-1" />
-                <span className=" text-neutral-600">ou</span>
-                <Separator className="flex-1" />
-            </div>
-
-            <Button variant="outline" className="w-full flex items-center gap-2 border-neutral-300"
-            onClick={() => signIn("google")}>
-                <FcGoogle className="h-5 w-5" />
-                Entrar com Google
-            </Button>
-
-            <p className="text-center text-sm text-neutral-600">
-                Não tem conta?{""}
-                <Link href="/register" className="font-medium text-neutral-900 hover:underline">
-                    Criar conta
-                </Link>
-            </p>
-
-
-            </CardContent>
-        </Card>
+          <p className="text-center text-sm text-neutral-600">
+            Não tem conta?{" "}
+            <Link
+              href="/register"
+              className="font-medium text-neutral-900 hover:underline"
+            >
+              Criar conta
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
-)
-
+  )
 }

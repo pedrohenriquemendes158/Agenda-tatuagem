@@ -17,6 +17,7 @@ model User {
    resetToken       String?
   resetTokenExpiry DateTime?
   createdAt DateTime @default(now())
+  tattooRequests TattooRequest[]
 }
 
 enum Role {
@@ -24,3 +25,29 @@ enum Role {
   ARTIST
   ADMIN
 }
+
+model TattooRequest {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    User     @relation(fields: [clientId], references: [id])
+
+  bodyPlace String
+  size      String
+  imageUrl  String
+  date      String
+  time      String
+  notes     String?
+
+  status    RequestStatus @default(PENDENTE)
+  budget    Float?
+
+  createdAt DateTime @default(now())
+}
+
+enum RequestStatus {
+  PENDENTE          // cliente enviou pedido
+  ORCAMENTO_ENVIADO // tatuador enviou valor
+  ACEITO            // cliente aceitou
+  RECUSADO          // cliente recusou
+}
+
